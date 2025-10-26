@@ -4,11 +4,11 @@ Zenith is a clean, modern Zsh theme designed for efficiency and aesthetics. Feat
 
 ## Features
 
-- **Minimalist design** – Keeps the focus on your workflow.
+- **Minimalist design** – Keeps the focus on your workflow with subtle borders framing the prompt area.
 - **Color-coded Git status** – Instantly see changes in your repository.
-- **Compact directory display** – Shows only the last two directories for clarity.
-- **Command execution time** – Displays execution time if a command takes longer than 3 seconds.
+- **Compact directory display** – Shows only the last two directories for clarity. When in home directory, displays expanded path for better context.
 - **Intuitive prompt symbols** – Quick visual feedback on success or failure.
+- **Clean multiline continuation** – Subtle vertical line for multiline commands instead of distracting "quote>" prompt.
 
 ## Installation
 
@@ -29,12 +29,19 @@ Zenith is a clean, modern Zsh theme designed for efficiency and aesthetics. Feat
 
 ## Prompt Overview
 
-Zenith provides an elegant and informative prompt:
+Zenith provides an elegant and informative prompt with a clean bordered design:
 
-- **Directory** – Shows the last two folders in the path.
+```
+╭─ ~/project ✱? main
+╰─ ❯
+```
+
+- **Subtle Borders** – Uses box-drawing characters (`╭─` and `╰─`) in gray to frame the prompt area without visual clutter.
+- **Directory** – Shows the last two folders in the path. When in home directory, displays both `~` and the full path (e.g., `~ /Users/username`) for better context.
 - **Git Status** – Displays:
   - `✓` (green) if clean
-  - `+` (green) for added files
+  - `✱` (yellow) if dirty repository
+  - `+` (green) for staged files
   - `~` (yellow) for modified files
   - `-` (red) for deleted files
   - `»` (light blue) for renamed files
@@ -42,8 +49,8 @@ Zenith provides an elegant and informative prompt:
   - `?` (cyan) for untracked files
   - `↑` (cyan) if ahead of remote
   - `↓` (cyan) if behind remote
-- **Command Execution Time** – Displays in the right prompt if execution takes longer than 3 seconds.
 - **Prompt Symbol** – Shows `❯` in cyan for success and red for failure.
+- **Multiline Continuation** – Uses a subtle vertical line (`│`) for continued commands instead of the default `quote>` prompt.
 
 ## Customization
 
@@ -58,4 +65,3 @@ _Example screenshot of the prompt in action_
 ## License
 
 Zenith is released under the [MIT License](LICENSE).
-
