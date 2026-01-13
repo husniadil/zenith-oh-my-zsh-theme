@@ -19,13 +19,15 @@ function zmx_indicator() {
 }
 
 # Virtualization environment indicator (PVE host, LXC container, VM)
+# Priority: LXC_ID > PVE_VMID > PVE_HOST > auto-detect
+# This order prevents inherited PVE_HOST from overriding LXC_ID in containers
 function virt_indicator() {
-  if [[ -n $PVE_HOST ]]; then
-    echo "${cyan}[PVE]${reset} "
-  elif [[ -n $LXC_ID ]]; then
+  if [[ -n $LXC_ID ]]; then
     echo "${cyan}[LXC:${LXC_ID}]${reset} "
   elif [[ -n $PVE_VMID ]]; then
     echo "${cyan}[VM:${PVE_VMID}]${reset} "
+  elif [[ -n $PVE_HOST ]]; then
+    echo "${cyan}[PVE]${reset} "
   else
     # Auto-detect LXC container
     local container_env=$(cat /proc/1/environ 2>/dev/null | tr '\0' '\n' | grep '^container=' | cut -d= -f2)
