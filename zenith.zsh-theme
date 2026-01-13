@@ -9,6 +9,81 @@ local green="%{$FG[114]%}"
 local yellow="%{$FG[221]%}"
 local red="%{$FG[203]%}"
 local magenta="%{$FG[213]%}"
+local orange="%{$FG[208]%}"
+
+# ZMX session indicator (https://github.com/neurosnap/zmx)
+function zmx_indicator() {
+  if [[ -n $ZMX_SESSION ]]; then
+    echo "${orange}[zmx:${ZMX_SESSION}]${reset} "
+  fi
+}
+
+# Virtualization environment indicator (PVE host, LXC container, VM)
+function virt_indicator() {
+  if [[ -n $PVE_HOST ]]; then
+    echo "${cyan}[PVE]${reset} "
+  elif [[ -n $LXC_ID ]]; then
+    echo "${cyan}[LXC:${LXC_ID}]${reset} "
+  elif [[ -n $PVE_VMID ]]; then
+    echo "${cyan}[VM:${PVE_VMID}]${reset} "
+  else
+    # Auto-detect LXC container
+    local container_env=$(cat /proc/1/environ 2>/dev/null | tr '\0' '\n' | grep '^container=' | cut -d= -f2)
+    if [[ "$container_env" == "lxc" ]]; then
+      echo "${cyan}[LXC]${reset} "
+    # Auto-detect VM (KVM/QEMU)
+    elif command -v systemd-detect-virt &>/dev/null; then
+      local virt_type=$(systemd-detect-virt 2>/dev/null)
+      if [[ "$virt_type" == "kvm" || "$virt_type" == "qemu" ]]; then
+        echo "${cyan}[VM]${reset} "
+      fi
+    fi
+  fi
+}
+
+# Terminal multiplexer indicator (tmux/screen/zellij/dvtm/abduco)
+function mux_indicator() {
+  if [[ -n $TMUX ]]; then
+    local session_name=$(tmux display-message -p '#S' 2>/dev/null)
+    if [[ -n $session_name ]]; then
+      echo "${yellow}[tmux:${session_name}]${reset} "
+    else
+      echo "${yellow}[tmux]${reset} "
+    fi
+  elif [[ -n $STY ]]; then
+    # STY format: pid.session_name.host - extract session name
+    local session_name=${STY#*.}
+    session_name=${session_name%%.*}
+    if [[ -n $session_name ]]; then
+      echo "${yellow}[screen:${session_name}]${reset} "
+    else
+      echo "${yellow}[screen]${reset} "
+    fi
+  elif [[ -n $ZELLIJ ]]; then
+    # ZELLIJ contains session id, get name via zellij command
+    local session_name=$(zellij list-sessions 2>/dev/null | grep CURRENT | awk '{print $1}')
+    if [[ -n $session_name ]]; then
+      echo "${yellow}[zellij:${session_name}]${reset} "
+    else
+      echo "${yellow}[zellij]${reset} "
+    fi
+  elif [[ -n $DVTM ]]; then
+    echo "${yellow}[dvtm]${reset} "
+  elif [[ -n $ABDUCO_SOCKET ]]; then
+    # Extract session name from socket path
+    local session_name=$(basename "$ABDUCO_SOCKET" 2>/dev/null)
+    if [[ -n $session_name ]]; then
+      echo "${yellow}[abduco:${session_name}]${reset} "
+    else
+      echo "${yellow}[abduco]${reset} "
+    fi
+  fi
+}
+
+# Hostname indicator (always visible)
+function hostname_indicator() {
+  echo "${green}@%m${reset} "
+}
 
 # Custom git prompt with traditional symbols
 function custom_git_info() {
@@ -16,14 +91,20 @@ function custom_git_info() {
   ref=$(command git symbolic-ref HEAD 2> /dev/null) || \
   ref=$(command git rev-parse --short HEAD 2> /dev/null)
 
+  # Session context indicators
+  local zmx_prefix="$(zmx_indicator)"
+  local virt_prefix="$(virt_indicator)"
+  local mux_prefix="$(mux_indicator)"
+  local host_prefix="$(hostname_indicator)"
+
   # If not in git repo, just show directory
   if [[ -z $ref ]]; then
     local border="${gray}╭─${reset}"
     # Show expanded path if in home directory
     if [[ "$PWD" == "$HOME" ]]; then
-      echo "${border} ${lightblue}~ ${gray}$HOME${reset}"
+      echo "${border} ${host_prefix}${virt_prefix}${mux_prefix}${zmx_prefix}${lightblue}~ ${gray}$HOME${reset}"
     else
-      echo "${border} ${lightblue}%2~${reset}"
+      echo "${border} ${host_prefix}${virt_prefix}${mux_prefix}${zmx_prefix}${lightblue}%2~${reset}"
     fi
     return 0
   fi
@@ -74,7 +155,7 @@ function custom_git_info() {
 
   # Add subtle top border
   local border="${gray}╭─${reset}"
-  echo "${border} ${lightblue}%2~${reset} ${git_status} ${magenta}${branch}${reset}"
+  echo "${border} ${host_prefix}${virt_prefix}${mux_prefix}${zmx_prefix}${lightblue}%2~${reset} ${git_status} ${magenta}${branch}${reset}"
 }
 
 # Main prompt
