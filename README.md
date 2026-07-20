@@ -75,12 +75,12 @@ Automatically detected when running inside a terminal multiplexer:
 
 | Multiplexer | Indicator Example |
 |-------------|-------------------|
-| tmux | `[tmux:session-name]` |
-| GNU Screen | `[screen:session-name]` |
-| Zellij | `[zellij:session-name]` |
-| dvtm | `[dvtm]` |
-| abduco | `[abduco:session-name]` |
-| meja | `[meja:session-name]` |
+| [tmux](https://github.com/tmux/tmux) | `[tmux:session-name]` |
+| [GNU Screen](https://www.gnu.org/software/screen/) | `[screen:session-name]` |
+| [Zellij](https://github.com/zellij-org/zellij) | `[zellij:session-name]` |
+| [dvtm](https://github.com/martanne/dvtm) | `[dvtm]` |
+| [abduco](https://github.com/martanne/abduco) | `[abduco:session-name]` |
+| [meja](https://github.com/garindra/meja) | `[meja:session-name]` |
 
 ### ZMX Session
 
