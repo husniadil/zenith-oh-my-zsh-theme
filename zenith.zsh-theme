@@ -79,6 +79,14 @@ function mux_indicator() {
     else
       echo "${yellow}[abduco]${reset} "
     fi
+  elif [[ -n $MEJA_SESSION_TARGET ]]; then
+    # MEJA_SESSION_TARGET is the numeric session ID; resolve name via meja ls
+    local session_name=$(meja ls 2>/dev/null | awk -v id="$MEJA_SESSION_TARGET" '$1==id {print $2}')
+    if [[ -n $session_name && $session_name != "<unnamed>" ]]; then
+      echo "${yellow}[meja:${session_name}]${reset} "
+    else
+      echo "${yellow}[meja]${reset} "
+    fi
   fi
 }
 

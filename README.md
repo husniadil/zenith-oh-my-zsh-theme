@@ -80,6 +80,7 @@ Automatically detected when running inside a terminal multiplexer:
 | Zellij | `[zellij:session-name]` |
 | dvtm | `[dvtm]` |
 | abduco | `[abduco:session-name]` |
+| meja | `[meja:session-name]` |
 
 ### ZMX Session
 
