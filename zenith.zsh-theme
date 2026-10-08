@@ -121,33 +121,56 @@ function custom_git_info() {
 
   local branch=${ref#refs/heads/}
 
-  # Get git status
+  # Get git status. One `git status` answers every indicator below: each
+  # separate git command walked the worktree again, which took a second per
+  # prompt in a large repository, and zsh redraws the prompt on every resize.
   local git_status=""
-  local git_ahead=$(command git rev-list --count @{upstream}..HEAD 2>/dev/null)
-  local git_behind=$(command git rev-list --count HEAD..@{upstream} 2>/dev/null)
+  local git_ahead=0 git_behind=0
+  local dirty="" untracked="" staged="" unstaged="" deleted="" renamed="" unmerged=""
+  local line xy
+  for line in "${(@f)$(command git status --porcelain=v2 --branch 2> /dev/null)}"; do
+    case $line in
+      ("# branch.ab "*)
+        xy=(${=line#\# branch.ab })
+        git_ahead=${xy[1]#+}
+        git_behind=${xy[2]#-}
+        ;;
+      ("#"*) ;;
+      ("? "*) dirty=1 untracked=1 ;;
+      ("u "*) dirty=1 staged=1 unstaged=1 unmerged=1 ;;
+      ([12]" "*)
+        dirty=1
+        xy=${line[3,4]}
+        [[ ${xy[1]} != . ]] && staged=1
+        [[ ${xy[2]} != . ]] && unstaged=1
+        [[ ${xy[2]} == D ]] && deleted=1
+        [[ ${line[1]} == 2 && ${xy[1]} == R ]] && renamed=1
+        ;;
+    esac
+  done
 
   # Check for changes
-  if [[ -n $(git status -s 2> /dev/null) ]]; then
+  if [[ -n $dirty ]]; then
     # Dirty repository
     git_status="${yellow}✱${reset}"
 
     # Add specific status indicators
-    if [[ -n $(git ls-files --other --exclude-standard 2> /dev/null) ]]; then
+    if [[ -n $untracked ]]; then
       git_status="${git_status}${cyan}?${reset}"
     fi
-    if [[ -n $(git diff --name-only --cached 2> /dev/null) ]]; then
+    if [[ -n $staged ]]; then
       git_status="${git_status}${green}+${reset}"
     fi
-    if [[ -n $(git diff --name-only 2> /dev/null) ]]; then
+    if [[ -n $unstaged ]]; then
       git_status="${git_status}${yellow}~${reset}"
     fi
-    if [[ -n $(git ls-files --deleted 2> /dev/null) ]]; then
+    if [[ -n $deleted ]]; then
       git_status="${git_status}${red}-${reset}"
     fi
-    if [[ -n $(git diff --name-status --cached 2> /dev/null | grep '^R') ]]; then
+    if [[ -n $renamed ]]; then
       git_status="${git_status}${lightblue}»${reset}"
     fi
-    if [[ -n $(git ls-files --unmerged 2> /dev/null) ]]; then
+    if [[ -n $unmerged ]]; then
       git_status="${git_status}${red}═${reset}"
     fi
   else
